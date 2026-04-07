@@ -1,0 +1,281 @@
+{
+  "meta_api_version": "v25.0",
+  "accounts": {
+    "ecommerce": [
+      {
+        "name": "Aebersold Florist",
+        "account_id": "act_1383720793501096",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Anaheim Hills Florist",
+        "account_id": "act_298652897504629",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Bedford Village",
+        "account_id": "act_855267591318353",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Blooms in Bunches",
+        "account_id": "act_955446961140839",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Bonnie Flowers",
+        "account_id": "act_1724700485361418",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Connectors Only",
+        "account_id": "act_1189462045743752",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Cordova Flowers",
+        "account_id": "act_1050970323234226",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Dottie's Flowers",
+        "account_id": "act_643032643250112",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Flowerama",
+        "account_id": "act_3202656773125801",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Four Seasons Flowers",
+        "account_id": "act_93885599",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Hall's Flowers",
+        "account_id": "act_92974070",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Karen's Florist",
+        "account_id": "act_110981846050021",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "LockSets Only",
+        "account_id": "act_348081671384285",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Nancy's Floral",
+        "account_id": "act_58858316",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Penny's by Plaza Flowers",
+        "account_id": "act_1268247013582631",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Polites Florist",
+        "account_id": "act_26630594529918438",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Radebaugh",
+        "account_id": "act_140655057",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Rockcastle Florist",
+        "account_id": "act_1201879400298223",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Stairparts Only",
+        "account_id": "act_378748568529977",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Williams Flowers",
+        "account_id": "act_286231854814735",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      },
+      {
+        "name": "Williams Portland",
+        "account_id": "act_1117086646998125",
+        "type": "ecommerce",
+        "event_type": "offsite_conversion.fb_pixel_purchase"
+      }
+    ],
+    "lead_gen": [
+      {
+        "name": "AW Law Ohio",
+        "account_id": "act_595126668073759",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Bear Landscaping",
+        "account_id": "act_1098045688012630",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Champion Propane",
+        "account_id": "act_1172708287424704",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Chestnutt Law",
+        "account_id": "act_10202501045220485",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "COMC",
+        "account_id": "act_1217906996523081",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Creative Kitchen Co.",
+        "account_id": "act_1592963944224446",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Dave Fox",
+        "account_id": "act_234989723838313",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Five Keys HOA",
+        "account_id": "act_1698469604207574",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "JCC Columbus",
+        "account_id": "act_593901211489696",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Light Up Columbus",
+        "account_id": "act_383177777813709",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Lily Baby Surrogacy",
+        "account_id": "act_1557500531517167",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Longmont Florist",
+        "account_id": "act_568651356563625",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Renadyl",
+        "account_id": "act_818884327732680",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "SAF",
+        "account_id": "act_1777847049130486",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Sedalia Dental",
+        "account_id": "act_738496583658265",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Sports Imports",
+        "account_id": "act_313758741",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "TeamBuildr",
+        "account_id": "act_33316291",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Whitehall Dental",
+        "account_id": "act_27621306824123170",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "Wild Doves",
+        "account_id": "act_1728025124756023",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      },
+      {
+        "name": "WorthPoint",
+        "account_id": "act_115669713",
+        "type": "lead_gen",
+        "event_types": ["lead", "offsite_conversion.fb_pixel_lead"]
+      }
+    ],
+    "special": [
+      {
+        "name": "Accel Conceptions",
+        "account_id": "act_546436166954705",
+        "type": "lead_gen",
+        "event_types": ["offsite_conversion.fb_pixel_custom"],
+        "custom_event_name": "EDC_Initial_Lead",
+        "notes": "Standard Lead event blocked by Meta \u2014 using custom event EDC_Initial_Lead"
+      },
+      {
+        "name": "Fairfax Surrogacy",
+        "account_id": "act_615023519829085",
+        "type": "lead_gen",
+        "event_types": ["lead", "onsite_conversion.lead_grouped"],
+        "skip_pixel_check": true,
+        "notes": "Lead Ads only (on-platform)"
+      },
+      {
+        "name": "JFS Surrogacy",
+        "account_id": "act_20513779",
+        "type": "lead_gen",
+        "event_types": ["lead", "onsite_conversion.lead_grouped"],
+        "skip_pixel_check": true,
+        "notes": "Lead Ads only (on-platform)"
+      }
+    ]
+  }
+}

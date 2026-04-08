@@ -110,7 +110,8 @@ def get_daily_insights(account_id, date_start, date_end, event_types):
     params = {
         "time_range": json.dumps({"since": date_start, "until": date_end}),
         "time_increment": "1",
-        "fields": "actions,spend"
+        "fields": "actions,spend",
+        "limit": "100"
     }
     data = api_call(endpoint, params)
 

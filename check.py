@@ -143,6 +143,27 @@ def get_insights(account_id, date_start, date_end, event_types):
     return total_actions
 
 
+def get_pageviews(account_id, date_start, date_end):
+    """Fetch PageView count for a given date range."""
+    endpoint = f"{account_id}/insights"
+    params = {
+        "time_range": json.dumps({"since": date_start, "until": date_end}),
+        "fields": "actions"
+    }
+    data = api_call(endpoint, params)
+    if not data or "data" not in data:
+        return 0
+    total_pageviews = 0
+    pageview_types = ["offsite_conversion.fb_pixel_view_content", "landing_page_view"]
+    for insight in data["data"]:
+        if "actions" in insight:
+            for action in insight["actions"]:
+                if action.get("action_type") in pageview_types:
+                    total_pageviews += int(action.get("value", 0))
+    print(f"  PageViews {account_id}: {total_pageviews}")
+    return total_pageviews
+
+
 def analyze_account(account):
     """Analyze a single account and return status info."""
     global alert_count, all_clear_count, no_spend_count
@@ -183,6 +204,11 @@ def analyze_account(account):
     # Get 7-day data and compute average
     seven_day_events = get_insights(account_id, seven_days_ago, yesterday, event_types)
     avg_daily_events = seven_day_events / 7 if seven_day_events > 0 else 0
+
+    # Get PageView counts
+    yesterday_pageviews = get_pageviews(account_id, yesterday, yesterday)
+    seven_day_pageviews = get_pageviews(account_id, seven_days_ago, yesterday)
+    avg_daily_pageviews = seven_day_pageviews / 7 if seven_day_pageviews > 0 else 0
 
     # Determine status and alert
     status = "Healthy"
@@ -227,6 +253,8 @@ def analyze_account(account):
         "pixel_alert": pixel_alert,
         "yesterday_events": yesterday_events,
         "seven_day_avg": round(avg_daily_events, 1),
+        "yesterday_pageviews": yesterday_pageviews,
+        "seven_day_avg_pageviews": round(avg_daily_pageviews, 1),
         "status": status,
         "alert": alert,
         "sort_key": 0 if status == "Critical" else (1 if status == "Warning" else (3 if status == "Healthy" else 4))
@@ -262,7 +290,7 @@ def generate_html(results):
             padding: 20px;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 10px;
@@ -397,6 +425,8 @@ def generate_html(results):
                             <th>Pixel Health</th>
                             <th>Yesterday Events</th>
                             <th>7-Day Avg</th>
+                            <th>PageViews (Yesterday)</th>
+                            <th>PageViews (7-Day Avg)</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -432,6 +462,12 @@ def generate_html(results):
 
         # 7-Day Avg
         html += f'                            <td>{result["seven_day_avg"]}</td>\n'
+
+        # PageViews Yesterday
+        html += f'                            <td>{result["yesterday_pageviews"]}</td>\n'
+
+        # PageViews 7-Day Avg
+        html += f'                            <td>{result["seven_day_avg_pageviews"]}</td>\n'
 
         # Status
         status_class = f'status-{result["status"].lower().replace(" ", "-")}'

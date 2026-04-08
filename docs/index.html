@@ -3,21 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TWM Marketing â Meta Ads Anomaly Detector</title>
+    <title>TWM Marketing - Meta Ads Anomaly Detector</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -26,25 +20,14 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
-
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 40px 30px;
             text-align: center;
         }
-
-        header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
+        header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 600; }
+        header p { font-size: 14px; opacity: 0.9; }
         .summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -53,7 +36,6 @@
             background: #f8f9fa;
             border-bottom: 1px solid #e0e0e0;
         }
-
         .summary-card {
             background: white;
             padding: 20px;
@@ -62,249 +44,59 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-left: 4px solid #667eea;
         }
-
-        .summary-card.critical {
-            border-left-color: #dc3545;
-        }
-
-        .summary-card.warning {
-            border-left-color: #ffc107;
-        }
-
-        .summary-card.healthy {
-            border-left-color: #28a745;
-        }
-
-        .summary-card .number {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 10px 0;
-        }
-
-        .summary-card .label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        thead {
-            background: #f1f3f5;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        th {
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #333;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 14px;
-        }
-
-        tr.critical {
-            background-color: #fff5f5;
-        }
-
-        tr.critical td {
-            color: #721c24;
-        }
-
-        tr.warning {
-            background-color: #fffbf0;
-        }
-
-        tr.warning td {
-            color: #856404;
-        }
-
-        tr.healthy {
-            background-color: #f0fff4;
-        }
-
-        tr.healthy td {
-            color: #155724;
-        }
-
-        tr.no-activity {
-            background-color: #f5f5f5;
-        }
-
-        tr.no-activity td {
-            color: #666;
-            opacity: 0.7;
-        }
-
-        tr.no-spend {
-            background-color: #f5f5f5;
-        }
-
-        tr.no-spend td {
-            color: #666;
-            opacity: 0.7;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-critical {
-            background: #dc3545;
-            color: white;
-        }
-
-        .status-warning {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .status-healthy {
-            background: #28a745;
-            color: white;
-        }
-
-        .status-no-activity {
-            background: #e9ecef;
-            color: #666;
-        }
-
-        .status-no-spend {
-            background: #e9ecef;
-            color: #666;
-        }
-
-        .alert {
-            display: inline-block;
-            padding: 4px 8px;
-            background: #fff3cd;
-            color: #856404;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .alert.critical {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .type-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            background: #e9ecef;
-            color: #495057;
-        }
-
-        .type-badge.ecommerce {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .type-badge.lead-gen {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        footer {
-            background: #f8f9fa;
-            padding: 20px 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .pixel-health {
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 3px;
-            display: inline-block;
-        }
-
-        .pixel-health.healthy {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .pixel-health.stale {
-            background: #f8d7da;
-            color: #721c24;
-            font-weight: 600;
-        }
-
-        .pixel-health.unknown {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-
-        .pixel-health.no-pixel {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .no-data {
-            color: #999;
-            font-style: italic;
-        }
-
+        .summary-card.critical { border-left-color: #dc3545; }
+        .summary-card.warning { border-left-color: #ffc107; }
+        .summary-card.healthy { border-left-color: #28a745; }
+        .summary-card .number { font-size: 32px; font-weight: 700; margin: 10px 0; }
+        .summary-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        .content { padding: 30px; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        thead { background: #f1f3f5; border-bottom: 2px solid #dee2e6; }
+        th { padding: 12px; text-align: left; font-weight: 600; color: #333; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
+        tr.critical { background-color: #fff5f5; }
+        tr.critical td { color: #721c24; }
+        tr.warning { background-color: #fffbf0; }
+        tr.warning td { color: #856404; }
+        tr.healthy { background-color: #f0fff4; }
+        tr.healthy td { color: #155724; }
+        tr.no-activity { background-color: #f5f5f5; }
+        tr.no-activity td { color: #666; opacity: 0.7; }
+        tr.no-spend { background-color: #f5f5f5; }
+        tr.no-spend td { color: #666; opacity: 0.7; }
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-critical { background: #dc3545; color: white; }
+        .status-warning { background: #ffc107; color: #333; }
+        .status-healthy { background: #28a745; color: white; }
+        .status-no-activity { background: #e9ecef; color: #666; }
+        .status-no-spend { background: #e9ecef; color: #666; }
+        .alert { display: inline-block; padding: 4px 8px; background: #fff3cd; color: #856404; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+        .alert.critical { background: #f8d7da; color: #721c24; }
+        .type-badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 11px; background: #e9ecef; color: #495057; }
+        .type-badge.ecommerce { background: #cfe2ff; color: #084298; }
+        .type-badge.lead-gen { background: #d1e7dd; color: #0f5132; }
+        footer { background: #f8f9fa; padding: 20px 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #e0e0e0; }
+        .pixel-health { font-size: 12px; padding: 2px 6px; border-radius: 3px; display: inline-block; }
+        .pixel-health.healthy { background: #d4edda; color: #155724; }
+        .pixel-health.stale { background: #f8d7da; color: #721c24; font-weight: 600; }
+        .pixel-health.unknown { background: #e2e3e5; color: #383d41; }
+        .pixel-health.no-pixel { background: #fff3cd; color: #856404; }
+        .no-data { color: #999; font-style: italic; }
         @media (max-width: 768px) {
-            header h1 {
-                font-size: 24px;
-            }
-
-            .summary {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                padding: 20px;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            th, td {
-                padding: 8px;
-            }
+            header h1 { font-size: 24px; }
+            .summary { grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
+            table { font-size: 12px; }
+            th, td { padding: 8px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>TWM Marketing â Meta Ads Anomaly Detector</h1>
-            <p>Last updated: 2026-04-07 19:56:34 ET</p>
+            <h1>TWM Marketing &mdash; Meta Ads Anomaly Detector</h1>
+            <p>Last updated: 2026-04-08 00:48:45 ET</p>
         </header>
-
         <div class="summary">
             <div class="summary-card critical">
                 <div class="label">Critical Alerts</div>
@@ -315,437 +107,435 @@
                 <div class="number">0</div>
             </div>
             <div class="summary-card healthy">
-                <div class="label">All Clear</div>
+                <div class="label">Healthy</div>
                 <div class="number">0</div>
             </div>
             <div class="summary-card">
-                <div class="label">No Spend</div>
-                <div class="number">0</div>
+                <div class="label">No Activity</div>
+                <div class="number">44</div>
             </div>
             <div class="summary-card">
                 <div class="label">Total Accounts</div>
                 <div class="number">44</div>
             </div>
         </div>
-
         <div class="content">
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Client Name</th>
+                            <th>Account Name</th>
                             <th>Type</th>
                             <th>Pixel Status</th>
+                            <th>Pixel Health</th>
                             <th>Yesterday Events</th>
                             <th>7-Day Avg</th>
                             <th>Status</th>
-                            <th>Alert</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr class="no-activity">
-                            <td><strong>AW Law Ohio</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>AW Law Ohio</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Accel Conceptions</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Accel Conceptions</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Aebersold Florist</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Aebersold Florist</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Anaheim Hills Florist</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Anaheim Hills Florist</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Bear Landscaping</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Bear Landscaping</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Bedford Village</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Bedford Village</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Blooms in Bunches</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Blooms in Bunches</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Bonnie Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Bonnie Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>COMC</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>COMC</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Champion Propane</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Champion Propane</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Chestnutt Law</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Chestnutt Law</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Connectors Only</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Connectors Only</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Cordova Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Cordova Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Creative Kitchen Co.</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Creative Kitchen Co.</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Dave Fox</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Dave Fox</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Dottie's Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Dottie's Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Fairfax Surrogacy</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Fairfax Surrogacy</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td>0</td>
                             <td>0</td>
                             <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Five Keys HOA</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Five Keys HOA</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Flowerama</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Flowerama</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Four Seasons Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Four Seasons Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Hall's Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Hall's Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>JCC Columbus</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>JCC Columbus</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>JFS Surrogacy</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>JFS Surrogacy</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td>0</td>
                             <td>0</td>
                             <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Karen's Florist</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Karen's Florist</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Light Up Columbus</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Light Up Columbus</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Lily Baby Surrogacy</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Lily Baby Surrogacy</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>LockSets Only</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>LockSets Only</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Longmont Florist</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Longmont Florist</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Nancy's Floral</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Nancy's Floral</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Penny's by Plaza Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Penny's by Plaza Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Polites Florist</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Polites Florist</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Radebaugh</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Radebaugh</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Renadyl</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Renadyl</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Rockcastle Florist</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Rockcastle Florist</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>SAF</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>SAF</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Sedalia Dental</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Sedalia Dental</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Sports Imports</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Sports Imports</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Stairparts Only</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Stairparts Only</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>TeamBuildr</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>TeamBuildr</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Whitehall Dental</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Whitehall Dental</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Wild Doves</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Wild Doves</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Williams Flowers</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Williams Flowers</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>Williams Portland</strong></td>
-                            <td><span class="type-badge ecommerce">Ecommerce</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>Williams Portland</td>
+                            <td><span class="type-badge ecommerce">ecommerce</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                         <tr class="no-activity">
-                            <td><strong>WorthPoint</strong></td>
-                            <td><span class="type-badge lead-gen">Lead Gen</span></td>
-                            <td><span class="no-data">â</span></td>
-                            <td><strong>0</strong></td>
+                            <td>WorthPoint</td>
+                            <td><span class="type-badge lead-gen">lead_gen</span></td>
+                            <td><span class="no-data">&mdash;</span></td>
+                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>
                             <td>0</td>
-                            <td><span class="status-badge status-no-activity">No Activity</span></td>
-                            <td><span class="no-data">â</span></td>
+                            <td>0</td>
+                            <td><span class="status-badge status-no-activity">No Activity</span> <span class="alert critical">NO PIXEL</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
         <footer>
-            Powered by TWM Marketing API â¢ Auto-refreshes daily at 9am ET
+            <p>Powered by TWM Marketing API &bull; Auto-refreshes daily at 9am ET</p>
         </footer>
     </div>
 </body>

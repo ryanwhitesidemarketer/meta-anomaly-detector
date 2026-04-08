@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Meta Ads Anomaly Detector
+Meta Ads Anomaly Detector v2
 Monitors pixel health and conversion event anomalies across Meta Ad accounts.
+Features 30-day trend charts, event type labels, and TWM branding.
 """
 
 import json
@@ -30,16 +31,9 @@ all_clear_count = 0
 no_spend_count = 0
 
 
-def get_yesterday_date():
-    """Return yesterday's date as YYYY-MM-DD."""
-    yesterday = datetime.now() - timedelta(days=1)
-    return yesterday.strftime("%Y-%m-%d")
-
-
-def get_7days_ago_date():
-    """Return date 7 days ago as YYYY-MM-DD."""
-    seven_days_ago = datetime.now() - timedelta(days=7)
-    return seven_days_ago.strftime("%Y-%m-%d")
+def get_date_n_days_ago(n):
+    """Return date N days ago as YYYY-MM-DD."""
+    return (datetime.now() - timedelta(days=n)).strftime("%Y-%m-%d")
 
 
 def api_call(endpoint, params=None):
@@ -52,7 +46,6 @@ def api_call(endpoint, params=None):
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
-        # Verbose logging for errors
         if "error" in data:
             print(f"API Error Response for {endpoint}: {data['error']}")
         return data
@@ -68,7 +61,7 @@ def api_call(endpoint, params=None):
                 pass
         return None
     finally:
-        time.sleep(0.1)  # Rate limiting: 100ms between calls
+        time.sleep(0.1)
 
 
 def get_pixel_id(account_id):
@@ -97,9 +90,7 @@ def check_pixel_health(pixel_id):
     if not last_fired:
         return None, "Never Fired"
 
-    # Parse last_fired_time
     try:
-        # Meta API returns +0000 format; fromisoformat needs +00:00
         cleaned = re.sub(r'([+-]\d{2})(\d{2})$', r'\1:\2', last_fired).replace("Z", "+00:00")
         fired_time = datetime.fromisoformat(cleaned)
         hours_ago = (datetime.now(fired_time.tzinfo) - fired_time).total_seconds() / 3600
@@ -113,68 +104,64 @@ def check_pixel_health(pixel_id):
         return None, "Error"
 
 
-def get_insights(account_id, date_start, date_end, event_types):
-    """Fetch insights for a given date range and event types."""
+def get_daily_insights(account_id, date_start, date_end, event_types):
+    """Fetch daily insights for a date range. Returns list of {date, events, pageviews}."""
     endpoint = f"{account_id}/insights"
     params = {
         "time_range": json.dumps({"since": date_start, "until": date_end}),
+        "time_increment": "1",
         "fields": "actions,spend"
     }
     data = api_call(endpoint, params)
 
-    if not data or "data" not in data:
-        print(f"  Insights {account_id}: spend=0, events=0")
-        return 0
+    daily_data = {}
+    if data and "data" in data:
+        for day in data["data"]:
+            date_str = day.get("date_start", "")
+            events = 0
+            pageviews = 0
+            if "actions" in day:
+                for action in day["actions"]:
+                    atype = action.get("action_type", "")
+                    val = int(action.get("value", 0))
+                    if atype in (event_types if isinstance(event_types, list) else [event_types]):
+                        events += val
+                    if atype in ["offsite_conversion.fb_pixel_view_content", "landing_page_view"]:
+                        pageviews += val
+            daily_data[date_str] = {"events": events, "pageviews": pageviews}
 
-    total_actions = 0
-    total_spend = 0
-    for insight in data["data"]:
-        if "spend" in insight:
-            try:
-                total_spend += float(insight["spend"])
-            except:
-                pass
-        if "actions" in insight:
-            for action in insight["actions"]:
-                if action.get("action_type") in (event_types if isinstance(event_types, list) else [event_types]):
-                    total_actions += int(action.get("value", 0))
-
-    print(f"  Insights {account_id}: spend={total_spend}, events={total_actions}")
-    return total_actions
+    return daily_data
 
 
-def get_pageviews(account_id, date_start, date_end):
-    """Fetch PageView count for a given date range."""
-    endpoint = f"{account_id}/insights"
-    params = {
-        "time_range": json.dumps({"since": date_start, "until": date_end}),
-        "fields": "actions"
-    }
-    data = api_call(endpoint, params)
-    if not data or "data" not in data:
-        return 0
-    total_pageviews = 0
-    pageview_types = ["offsite_conversion.fb_pixel_view_content", "landing_page_view"]
-    for insight in data["data"]:
-        if "actions" in insight:
-            for action in insight["actions"]:
-                if action.get("action_type") in pageview_types:
-                    total_pageviews += int(action.get("value", 0))
-    print(f"  PageViews {account_id}: {total_pageviews}")
-    return total_pageviews
+def get_event_label(account):
+    """Return a human-readable label for the event type being tracked."""
+    account_type = account.get("type")
+    if account_type == "ecommerce":
+        return "Purchases"
+    custom = account.get("custom_event_name")
+    if custom:
+        return custom.replace("_", " ").title()
+    event_types = account.get("event_types", [])
+    if isinstance(event_types, list):
+        for et in event_types:
+            if "lead" in et.lower():
+                return "Leads"
+    return "Leads"
 
 
 def analyze_account(account):
-    """Analyze a single account and return status info."""
+    """Analyze a single account and return status info with 30-day daily data."""
     global alert_count, all_clear_count, no_spend_count
 
     name = account.get("name")
     account_id = account.get("account_id")
     account_type = account.get("type")
     skip_pixel = account.get("skip_pixel_check", False)
+    event_label = get_event_label(account)
 
-    yesterday = get_yesterday_date()
-    seven_days_ago = get_7days_ago_date()
+    yesterday = get_date_n_days_ago(1)
+    thirty_days_ago = get_date_n_days_ago(31)
+    seven_days_ago = get_date_n_days_ago(7)
 
     # Get event types to track
     if account_type == "ecommerce":
@@ -182,7 +169,7 @@ def analyze_account(account):
     else:
         event_types = account.get("event_types", ["lead"])
 
-    # Check pixel health (skip for JFS Surrogacy)
+    # Check pixel health
     pixel_status = "N/A"
     pixel_health = "N/A"
     if not skip_pixel:
@@ -198,40 +185,43 @@ def analyze_account(account):
             pixel_health = "NO PIXEL"
             pixel_status = "NO PIXEL"
 
-    # Get conversion events for yesterday and 7-day average
-    yesterday_events = get_insights(account_id, yesterday, yesterday, event_types)
+    # Get 30-day daily data
+    daily = get_daily_insights(account_id, thirty_days_ago, yesterday, event_types)
 
-    # Get 7-day data and compute average
-    seven_day_events = get_insights(account_id, seven_days_ago, yesterday, event_types)
+    # Build sorted daily arrays for charting
+    all_dates = sorted(daily.keys())
+    daily_events = [daily[d]["events"] for d in all_dates]
+    daily_pageviews = [daily[d]["pageviews"] for d in all_dates]
+    chart_labels = [d[5:] for d in all_dates]  # MM-DD format
+
+    # Calculate yesterday and 7-day averages
+    yesterday_events = daily.get(yesterday, {}).get("events", 0)
+    yesterday_pageviews = daily.get(yesterday, {}).get("pageviews", 0)
+
+    recent_7_dates = [d for d in all_dates if d >= seven_days_ago]
+    seven_day_events = sum(daily.get(d, {}).get("events", 0) for d in recent_7_dates)
+    seven_day_pageviews = sum(daily.get(d, {}).get("pageviews", 0) for d in recent_7_dates)
     avg_daily_events = seven_day_events / 7 if seven_day_events > 0 else 0
-
-    # Get PageView counts
-    yesterday_pageviews = get_pageviews(account_id, yesterday, yesterday)
-    seven_day_pageviews = get_pageviews(account_id, seven_days_ago, yesterday)
     avg_daily_pageviews = seven_day_pageviews / 7 if seven_day_pageviews > 0 else 0
 
-    # Determine status and alert
+    # Determine status
     status = "Healthy"
     alert = ""
 
     if yesterday_events == 0 and avg_daily_events == 0:
-        # No spend and no history = no alerts needed
         status = "No Activity"
         no_spend_count += 1
     elif yesterday_events == 0 and avg_daily_events > 0:
-        # Zero events but expecting them = CRITICAL
         status = "Critical"
         alert = "ZERO EVENTS"
         alert_count += 1
     elif yesterday_events < (avg_daily_events * 0.5) and avg_daily_events > 0:
-        # Less than 50% of average = WARNING
         status = "Warning"
         alert = f"DOWN {int(100 - (yesterday_events / avg_daily_events * 100))}%"
         alert_count += 1
     else:
         all_clear_count += 1
 
-    # Pixel status alert
     pixel_alert = ""
     if pixel_health.startswith("STALE"):
         status = "Critical"
@@ -243,11 +233,12 @@ def analyze_account(account):
             status = "Warning"
             alert_count += 1
 
-    print(f"Account {name}: status={status}, alert={alert if alert else 'None'}")
+    print(f"Account {name}: status={status}, alert={alert if alert else 'None'}, days={len(all_dates)}")
 
     return {
         "name": name,
         "account_type": account_type,
+        "event_label": event_label,
         "pixel_status": pixel_status if pixel_status != "N/A" else "N/A",
         "pixel_health": pixel_health,
         "pixel_alert": pixel_alert,
@@ -255,6 +246,9 @@ def analyze_account(account):
         "seven_day_avg": round(avg_daily_events, 1),
         "yesterday_pageviews": yesterday_pageviews,
         "seven_day_avg_pageviews": round(avg_daily_pageviews, 1),
+        "chart_labels": chart_labels,
+        "chart_events": daily_events,
+        "chart_pageviews": daily_pageviews,
         "status": status,
         "alert": alert,
         "sort_key": 0 if status == "Critical" else (1 if status == "Warning" else (3 if status == "Healthy" else 4))
@@ -262,156 +256,272 @@ def analyze_account(account):
 
 
 def generate_html(results):
-    """Generate the HTML dashboard."""
+    """Generate the HTML dashboard with TWM branding and Chart.js graphs."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S ET")
 
-    # Sort by status (alerts first, then warnings, then healthy)
     sorted_results = sorted(results, key=lambda x: (x["sort_key"], x["name"]))
 
-    # Count statuses
     critical_count = sum(1 for r in sorted_results if r["status"] == "Critical")
     warning_count = sum(1 for r in sorted_results if r["status"] == "Warning")
     healthy_count = sum(1 for r in sorted_results if r["status"] == "Healthy")
     no_activity_count = sum(1 for r in sorted_results if r["status"] == "No Activity")
-    no_spend_count_val = sum(1 for r in sorted_results if r["status"] == "No Spend")
 
-    html = """<!DOCTYPE html>
+    # Serialize chart data for JS
+    chart_data_json = json.dumps([{
+        "name": r["name"],
+        "labels": r["chart_labels"],
+        "events": r["chart_events"],
+        "pageviews": r["chart_pageviews"],
+        "eventLabel": r["event_label"]
+    } for r in sorted_results])
+
+    html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TWM Marketing - Meta Ads Anomaly Detector</title>
+    <title>TWM Meta Ads Anomaly Detector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f2f5;
             min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
+            color: #333;
+        }}
+        .container {{
             max-width: 1400px;
             margin: 0 auto;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }}
+        header {{
+            background: linear-gradient(135deg, #050062 0%, #003D8E 100%);
             color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
-        header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 600; }
-        header p { font-size: 14px; opacity: 0.9; }
-        .summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            padding: 32px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }}
+        .header-left {{
+            display: flex;
+            align-items: center;
             gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .summary-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
+        }}
+        .header-logo {{
+            height: 48px;
+            filter: brightness(0) invert(1);
+        }}
+        header h1 {{
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }}
+        header .subtitle {{
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }}
+        .summary {{
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            border-bottom: 2px solid #e8e8e8;
+        }}
+        .summary-card {{
+            padding: 24px 20px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #667eea;
-        }
-        .summary-card.critical { border-left-color: #dc3545; }
-        .summary-card.warning { border-left-color: #ffc107; }
-        .summary-card.healthy { border-left-color: #28a745; }
-        .summary-card .number { font-size: 32px; font-weight: 700; margin: 10px 0; }
-        .summary-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .content { padding: 30px; }
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        thead { background: #f1f3f5; border-bottom: 2px solid #dee2e6; }
-        th { padding: 12px; text-align: left; font-weight: 600; color: #333; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-        td { padding: 12px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
-        tr.critical { background-color: #fff5f5; }
-        tr.critical td { color: #721c24; }
-        tr.warning { background-color: #fffbf0; }
-        tr.warning td { color: #856404; }
-        tr.healthy { background-color: #f0fff4; }
-        tr.healthy td { color: #155724; }
-        tr.no-activity { background-color: #f5f5f5; }
-        tr.no-activity td { color: #666; opacity: 0.7; }
-        tr.no-spend { background-color: #f5f5f5; }
-        tr.no-spend td { color: #666; opacity: 0.7; }
-        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .status-critical { background: #dc3545; color: white; }
-        .status-warning { background: #ffc107; color: #333; }
-        .status-healthy { background: #28a745; color: white; }
-        .status-no-activity { background: #e9ecef; color: #666; }
-        .status-no-spend { background: #e9ecef; color: #666; }
-        .alert { display: inline-block; padding: 4px 8px; background: #fff3cd; color: #856404; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
-        .alert.critical { background: #f8d7da; color: #721c24; }
-        .type-badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 11px; background: #e9ecef; color: #495057; }
-        .type-badge.ecommerce { background: #cfe2ff; color: #084298; }
-        .type-badge.lead-gen { background: #d1e7dd; color: #0f5132; }
-        footer { background: #f8f9fa; padding: 20px 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #e0e0e0; }
-        .pixel-health { font-size: 12px; padding: 2px 6px; border-radius: 3px; display: inline-block; }
-        .pixel-health.healthy { background: #d4edda; color: #155724; }
-        .pixel-health.stale { background: #f8d7da; color: #721c24; font-weight: 600; }
-        .pixel-health.unknown { background: #e2e3e5; color: #383d41; }
-        .pixel-health.no-pixel { background: #fff3cd; color: #856404; }
-        .no-data { color: #999; font-style: italic; }
-        @media (max-width: 768px) {
-            header h1 { font-size: 24px; }
-            .summary { grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px; }
-            table { font-size: 12px; }
-            th, td { padding: 8px; }
-        }
+            border-right: 1px solid #e8e8e8;
+            transition: background 0.2s;
+        }}
+        .summary-card:last-child {{ border-right: none; }}
+        .summary-card .number {{
+            font-size: 36px;
+            font-weight: 700;
+            margin: 6px 0;
+        }}
+        .summary-card .label {{
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }}
+        .summary-card.critical .number {{ color: #dc3545; }}
+        .summary-card.warning .number {{ color: #FF6100; }}
+        .summary-card.healthy .number {{ color: #00B6DB; }}
+        .content {{ padding: 0; }}
+        .table-wrapper {{ overflow-x: auto; }}
+        table {{ width: 100%; border-collapse: collapse; }}
+        thead {{ background: #fafafa; }}
+        th {{
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-bottom: 2px solid #e8e8e8;
+        }}
+        td {{
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }}
+        tr.data-row {{ cursor: pointer; transition: background 0.15s; }}
+        tr.data-row:hover {{ background: #f8f9ff; }}
+        tr.critical {{ background-color: #fff8f8; }}
+        tr.critical:hover {{ background-color: #fff0f0; }}
+        tr.warning {{ background-color: #fffbf5; }}
+        tr.warning:hover {{ background-color: #fff5e8; }}
+        tr.healthy {{ background-color: #f8fdff; }}
+        tr.healthy:hover {{ background-color: #f0faff; }}
+        tr.no-activity td {{ color: #999; }}
+        .account-name {{
+            font-weight: 600;
+            font-size: 14px;
+        }}
+        .account-name.ecommerce {{ color: #003D8E; }}
+        .account-name.lead-gen {{ color: #00856A; }}
+        .status-badge {{
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .status-critical {{ background: #dc3545; color: white; }}
+        .status-warning {{ background: #FF6100; color: white; }}
+        .status-healthy {{ background: #00B6DB; color: white; }}
+        .status-no-activity {{ background: #e9ecef; color: #888; }}
+        .alert {{
+            display: inline-block;
+            padding: 3px 8px;
+            background: #fff0f0;
+            color: #dc3545;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+        }}
+        .pixel-health {{
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 500;
+        }}
+        .pixel-health.healthy {{ background: #e8f8f0; color: #00856A; }}
+        .pixel-health.stale {{ background: #fff0f0; color: #dc3545; font-weight: 600; }}
+        .pixel-health.unknown {{ background: #f0f0f0; color: #888; }}
+        .pixel-health.no-pixel {{ background: #fff5e8; color: #FF6100; }}
+        .no-data {{ color: #ccc; }}
+        .expand-icon {{
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            transition: transform 0.2s;
+            margin-right: 8px;
+        }}
+        tr.expanded .expand-icon {{ transform: rotate(90deg); }}
+        .chart-row {{ display: none; }}
+        .chart-row.visible {{ display: table-row; }}
+        .chart-row td {{
+            padding: 16px 24px 24px;
+            background: #fafbfc;
+            border-bottom: 2px solid #e8e8e8;
+        }}
+        .chart-container {{
+            max-width: 900px;
+            height: 250px;
+        }}
+        .event-label {{
+            font-size: 11px;
+            color: #888;
+            font-weight: 500;
+        }}
+        .legend-hint {{
+            display: flex;
+            gap: 20px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }}
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #666;
+        }}
+        .legend-dot {{
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }}
+        footer {{
+            background: #050062;
+            padding: 24px 40px;
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }}
+        footer img {{
+            height: 28px;
+            opacity: 0.8;
+        }}
+        @media (max-width: 900px) {{
+            header {{ flex-direction: column; text-align: center; gap: 12px; padding: 24px 20px; }}
+            .summary {{ grid-template-columns: repeat(3, 1fr); }}
+            th, td {{ padding: 10px 8px; font-size: 12px; }}
+            .chart-container {{ height: 200px; }}
+        }}
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>TWM Marketing &mdash; Meta Ads Anomaly Detector</h1>
-            <p>Last updated: """
-
-    html += timestamp
-    html += """</p>
+            <div class="header-left">
+                <img src="https://twowheelsmarketing.com/wp-content/uploads/2023/08/footerlogo-outer-1.svg" alt="TWM" class="header-logo">
+                <div>
+                    <h1>Meta Ads Anomaly Detector</h1>
+                    <div class="subtitle">Last updated: {timestamp}</div>
+                </div>
+            </div>
         </header>
         <div class="summary">
             <div class="summary-card critical">
-                <div class="label">Critical Alerts</div>
-                <div class="number">"""
-
-    html += str(critical_count)
-    html += """</div>
+                <div class="label">Critical</div>
+                <div class="number">{critical_count}</div>
             </div>
             <div class="summary-card warning">
                 <div class="label">Warnings</div>
-                <div class="number">"""
-
-    html += str(warning_count)
-    html += """</div>
+                <div class="number">{warning_count}</div>
             </div>
             <div class="summary-card healthy">
                 <div class="label">Healthy</div>
-                <div class="number">"""
-
-    html += str(healthy_count)
-    html += """</div>
+                <div class="number">{healthy_count}</div>
             </div>
             <div class="summary-card">
                 <div class="label">No Activity</div>
-                <div class="number">"""
-
-    html += str(no_activity_count)
-    html += """</div>
+                <div class="number" style="color:#999">{no_activity_count}</div>
             </div>
             <div class="summary-card">
-                <div class="label">Total Accounts</div>
-                <div class="number">"""
-
-    html += str(len(sorted_results))
-    html += """</div>
+                <div class="label">Total</div>
+                <div class="number" style="color:#050062">{len(sorted_results)}</div>
             </div>
         </div>
         <div class="content">
@@ -419,46 +529,43 @@ def generate_html(results):
                 <table>
                     <thead>
                         <tr>
-                            <th>Account Name</th>
-                            <th>Type</th>
-                            <th>Pixel Status</th>
-                            <th>Pixel Health</th>
-                            <th>Yesterday Events</th>
+                            <th style="width:22%">Account</th>
+                            <th>Pixel</th>
+                            <th>Event Type</th>
+                            <th>Yesterday</th>
                             <th>7-Day Avg</th>
-                            <th>PageViews (Yesterday)</th>
-                            <th>PageViews (7-Day Avg)</th>
+                            <th>PageViews (Yday)</th>
+                            <th>PV 7-Day Avg</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
 """
 
-    for result in sorted_results:
+    for idx, result in enumerate(sorted_results):
         row_class = result["status"].lower().replace(" ", "-")
-        html += f'                        <tr class="{row_class}">\n'
-        html += f'                            <td>{result["name"]}</td>\n'
-        html += f'                            <td><span class="type-badge {"ecommerce" if result["account_type"] == "ecommerce" else "lead-gen"}">{result["account_type"]}</span></td>\n'
+        name_class = "ecommerce" if result["account_type"] == "ecommerce" else "lead-gen"
 
-        # Pixel Status column
-        if result["pixel_status"] == "N/A" or result["pixel_status"] == "NO PIXEL":
-            html += f'                            <td><span class="no-data">&mdash;</span></td>\n'
-        else:
-            html += f'                            <td><code style="font-size: 11px;">{result["pixel_status"]}</code></td>\n'
+        html += f'                        <tr class="{row_class} data-row" onclick="toggleChart({idx})" id="row-{idx}">\n'
+        html += f'                            <td><span class="expand-icon">&#9654;</span><span class="account-name {name_class}">{result["name"]}</span></td>\n'
 
-        # Pixel Health column
+        # Pixel Health
         if result["pixel_health"] == "N/A":
             html += f'                            <td><span class="no-data">&mdash;</span></td>\n'
         elif result["pixel_health"] == "NO PIXEL":
-            html += f'                            <td><span class="pixel-health no-pixel">NO PIXEL</span></td>\n'
+            html += f'                            <td><span class="pixel-health no-pixel">No Pixel</span></td>\n'
         elif result["pixel_health"] == "HEALTHY":
-            html += f'                            <td><span class="pixel-health healthy">HEALTHY</span></td>\n'
+            html += f'                            <td><span class="pixel-health healthy">Healthy</span></td>\n'
         elif result["pixel_health"].startswith("STALE"):
             html += f'                            <td><span class="pixel-health stale">{result["pixel_health"]}</span></td>\n'
         else:
             html += f'                            <td><span class="pixel-health unknown">{result["pixel_health"]}</span></td>\n'
 
+        # Event Type label
+        html += f'                            <td><span class="event-label">{result["event_label"]}</span></td>\n'
+
         # Yesterday Events
-        html += f'                            <td>{result["yesterday_events"]}</td>\n'
+        html += f'                            <td><strong>{result["yesterday_events"]}</strong></td>\n'
 
         # 7-Day Avg
         html += f'                            <td>{result["seven_day_avg"]}</td>\n'
@@ -473,11 +580,21 @@ def generate_html(results):
         status_class = f'status-{result["status"].lower().replace(" ", "-")}'
         html += f'                            <td><span class="status-badge {status_class}">{result["status"]}</span>'
         if result["alert"]:
-            alert_class = "critical" if result["status"] == "Critical" else ""
-            html += f' <span class="alert {alert_class}">{result["alert"]}</span>'
+            html += f' <span class="alert">{result["alert"]}</span>'
         if result["pixel_alert"]:
-            html += f' <span class="alert critical">{result["pixel_alert"]}</span>'
+            html += f' <span class="alert">{result["pixel_alert"]}</span>'
         html += f'</td>\n'
+        html += f'                        </tr>\n'
+
+        # Chart row (hidden by default)
+        html += f'                        <tr class="chart-row" id="chart-row-{idx}">\n'
+        html += f'                            <td colspan="8">\n'
+        html += f'                                <div class="legend-hint">\n'
+        html += f'                                    <div class="legend-item"><div class="legend-dot" style="background:#FF6100"></div>{result["event_label"]}</div>\n'
+        html += f'                                    <div class="legend-item"><div class="legend-dot" style="background:#00B6DB"></div>PageViews</div>\n'
+        html += f'                                </div>\n'
+        html += f'                                <div class="chart-container"><canvas id="chart-{idx}"></canvas></div>\n'
+        html += f'                            </td>\n'
         html += f'                        </tr>\n'
 
     html += """                    </tbody>
@@ -485,9 +602,95 @@ def generate_html(results):
             </div>
         </div>
         <footer>
-            <p>Powered by TWM Marketing API &bull; Auto-refreshes daily at 9am ET</p>
+            <img src="https://twowheelsmarketing.com/wp-content/uploads/2023/08/footerlogo-outer-1.svg" alt="Two Wheels Marketing">
+            <span>Powered by Two Wheels Marketing &bull; Auto-refreshes daily at 9am ET</span>
         </footer>
     </div>
+    <script>
+"""
+    html += f"    const chartData = {chart_data_json};\n"
+    html += """    const charts = {};
+
+    function toggleChart(idx) {
+        const row = document.getElementById('row-' + idx);
+        const chartRow = document.getElementById('chart-row-' + idx);
+        const isVisible = chartRow.classList.contains('visible');
+
+        if (isVisible) {
+            chartRow.classList.remove('visible');
+            row.classList.remove('expanded');
+            if (charts[idx]) {
+                charts[idx].destroy();
+                delete charts[idx];
+            }
+        } else {
+            chartRow.classList.add('visible');
+            row.classList.add('expanded');
+            createChart(idx);
+        }
+    }
+
+    function createChart(idx) {
+        const d = chartData[idx];
+        const ctx = document.getElementById('chart-' + idx).getContext('2d');
+        charts[idx] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: d.labels,
+                datasets: [
+                    {
+                        label: d.eventLabel,
+                        data: d.events,
+                        borderColor: '#FF6100',
+                        backgroundColor: 'rgba(255, 97, 0, 0.08)',
+                        borderWidth: 2.5,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'PageViews',
+                        data: d.pageviews,
+                        borderColor: '#00B6DB',
+                        backgroundColor: 'rgba(0, 182, 219, 0.06)',
+                        borderWidth: 2,
+                        pointRadius: 1.5,
+                        pointHoverRadius: 4,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#050062',
+                        titleFont: { family: 'DM Sans', size: 12 },
+                        bodyFont: { family: 'DM Sans', size: 12 },
+                        padding: 10,
+                        cornerRadius: 6
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'DM Sans', size: 10 }, color: '#999', maxTicksLimit: 15 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' },
+                        ticks: { font: { family: 'DM Sans', size: 11 }, color: '#999' }
+                    }
+                }
+            }
+        });
+    }
+    </script>
 </body>
 </html>
 """
@@ -508,7 +711,6 @@ def main():
         config = json.load(f)
 
     accounts_data = config.get("accounts", [])
-    # Flatten accounts: config may have categories (ecommerce, lead_gen, special) as dict
     if isinstance(accounts_data, dict):
         accounts = []
         for category in accounts_data.values():
@@ -521,7 +723,6 @@ def main():
     print(f"Analyzing {total_accounts} accounts...")
     print()
 
-    # Analyze each account
     results = []
     for account in accounts:
         result = analyze_account(account)
@@ -534,10 +735,8 @@ def main():
     print(f"  Healthy: {sum(1 for r in results if r['status'] == 'Healthy')}")
     print(f"  No Activity: {sum(1 for r in results if r['status'] == 'No Activity')}")
 
-    # Generate HTML
     html = generate_html(results)
 
-    # Write output file with UTF-8 encoding
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html)

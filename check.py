@@ -127,7 +127,9 @@ def get_daily_insights(account_id, date_start, date_end, event_types):
                     val = int(action.get("value", 0))
                     if atype in (event_types if isinstance(event_types, list) else [event_types]):
                         events += val
-                    if atype in ["offsite_conversion.fb_pixel_view_content", "landing_page_view"]:
+                    if atype in ["offsite_conversion.fb_pixel_view_content", "landing_page_view",
+                                  "page_view", "offsite_conversion.fb_pixel_page_view",
+                                  "view_content", "omni_view_content"]:
                         pageviews += val
             daily_data[date_str] = {"events": events, "pageviews": pageviews}
 
@@ -164,11 +166,22 @@ def analyze_account(account):
     thirty_days_ago = get_date_n_days_ago(31)
     seven_days_ago = get_date_n_days_ago(7)
 
-    # Get event types to track
+    # Get event types to track (include all Meta API naming variants)
     if account_type == "ecommerce":
-        event_types = [account.get("event_type")]
+        base = account.get("event_type", "")
+        event_types = [base, "purchase", "omni_purchase"]
+        if base and base not in event_types:
+            event_types.append(base)
     else:
-        event_types = account.get("event_types", ["lead"])
+        base_types = account.get("event_types", ["lead"])
+        event_types = list(base_types)
+        # Add variants for lead tracking
+        if any("lead" in et.lower() for et in base_types):
+            for variant in ["lead", "omni_lead", "offsite_conversion.fb_pixel_lead"]:
+                if variant not in event_types:
+                    event_types.append(variant)
+    # Deduplicate
+    event_types = list(dict.fromkeys(event_types))
 
     # Check pixel health
     pixel_status = "N/A"

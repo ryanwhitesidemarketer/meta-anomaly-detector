@@ -104,8 +104,70 @@ def check_pixel_health(pixel_id):
         return None, "Error"
 
 
+def get_pixel_event_names(account):
+    """Return the pixel event name(s) to look for in the pixel stats endpoint."""
+    account_type = account.get("type")
+    if account_type == "ecommerce":
+        return ["Purchase"]
+    custom = account.get("custom_event_name")
+    if custom:
+        return [custom]
+    return ["Lead"]
+
+
+def get_pixel_daily_stats(pixel_id, date_start, date_end, pixel_event_names):
+    """Fetch daily pixel event stats from the pixel stats endpoint (ALL events, not just ad-attributed)."""
+    start_ts = int(datetime.strptime(date_start, "%Y-%m-%d").timestamp())
+    end_ts = int(datetime.strptime(date_end, "%Y-%m-%d").timestamp()) + 86400
+
+    daily_data = {}
+
+    # Fetch target events (Purchase, Lead, custom, etc.)
+    for event_name in pixel_event_names:
+        endpoint = f"{pixel_id}/stats"
+        params = {
+            "start_time": str(start_ts),
+            "end_time": str(end_ts),
+            "aggregation": "event",
+            "event": event_name
+        }
+        data = api_call(endpoint, params)
+        if data and "data" in data:
+            for entry in data["data"]:
+                ts = entry.get("timestamp", "")
+                count = int(entry.get("count", 0))
+                if ts:
+                    date_str = ts[:10]
+                    if date_str not in daily_data:
+                        daily_data[date_str] = {"events": 0, "pageviews": 0}
+                    daily_data[date_str]["events"] += count
+        elif data and "error" in data:
+            print(f"  Pixel stats error for {event_name}: {data['error'].get('message', 'unknown')}")
+
+    # Fetch PageView events
+    endpoint = f"{pixel_id}/stats"
+    params = {
+        "start_time": str(start_ts),
+        "end_time": str(end_ts),
+        "aggregation": "event",
+        "event": "PageView"
+    }
+    data = api_call(endpoint, params)
+    if data and "data" in data:
+        for entry in data["data"]:
+            ts = entry.get("timestamp", "")
+            count = int(entry.get("count", 0))
+            if ts:
+                date_str = ts[:10]
+                if date_str not in daily_data:
+                    daily_data[date_str] = {"events": 0, "pageviews": 0}
+                daily_data[date_str]["pageviews"] += count
+
+    return daily_data
+
+
 def get_daily_insights(account_id, date_start, date_end, event_types):
-    """Fetch daily insights for a date range. Returns list of {date, events, pageviews}."""
+    """Fallback: Fetch daily ad-attributed insights for accounts without pixels."""
     endpoint = f"{account_id}/insights"
     params = {
         "time_range": json.dumps({"since": date_start, "until": date_end}),
@@ -183,9 +245,10 @@ def analyze_account(account):
     # Deduplicate
     event_types = list(dict.fromkeys(event_types))
 
-    # Check pixel health
+    # Check pixel health and get pixel ID
     pixel_status = "N/A"
     pixel_health = "N/A"
+    pixel_id = None
     if not skip_pixel:
         pixel_data = get_pixel_id(account_id)
         if pixel_data:
@@ -200,7 +263,17 @@ def analyze_account(account):
             pixel_status = "NO PIXEL"
 
     # Get 30-day daily data
-    daily = get_daily_insights(account_id, thirty_days_ago, yesterday, event_types)
+    # Use pixel stats (all events) when pixel is available; fall back to insights API
+    pixel_event_names = get_pixel_event_names(account)
+    if pixel_id:
+        print(f"  Using pixel stats for {name} (pixel {pixel_id}, events: {pixel_event_names})")
+        daily = get_pixel_daily_stats(pixel_id, thirty_days_ago, yesterday, pixel_event_names)
+        if not daily:
+            print(f"  Pixel stats empty, falling back to insights API for {name}")
+            daily = get_daily_insights(account_id, thirty_days_ago, yesterday, event_types)
+    else:
+        print(f"  Using insights API for {name} (no pixel)")
+        daily = get_daily_insights(account_id, thirty_days_ago, yesterday, event_types)
 
     # Build sorted daily arrays for charting
     all_dates = sorted(daily.keys())

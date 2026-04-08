@@ -61,7 +61,7 @@ def api_call(endpoint, params=None):
                 pass
         return None
     finally:
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 
 def get_pixel_id(account_id):
@@ -78,23 +78,21 @@ def get_pixel_id(account_id):
         # Multiple pixels â check PageView volume for each to find the most active
         best_pixel = None
         best_count = -1
-        now_ts = int(datetime.now().timestamp())
-        week_ago_ts = now_ts - (7 * 86400)
         for p in pixels:
             pid = p.get("id")
             stats_endpoint = f"{pid}/stats"
-            stats_params = {
-                "start_time": str(week_ago_ts),
-                "end_time": str(now_ts),
-                "aggregation": "event",
-                "event": "PageView"
-            }
+            # Use only aggregation=event, no other filter params
+            stats_params = {"aggregation": "event"}
             stats_data = api_call(stats_endpoint, stats_params)
             total = 0
             if stats_data and "data" in stats_data:
                 for entry in stats_data["data"]:
-                    total += int(entry.get("count", 0))
-            print(f"    Pixel {pid} ({p.get('name', 'unnamed')}): {total} PageViews (7d), last_fired: {p.get('last_fired_time', 'N/A')}")
+                    # Entry format: {start_time, aggregation, data: [{value, count}, ...]}
+                    if "data" in entry:
+                        for event_item in entry["data"]:
+                            if event_item.get("value") == "PageView":
+                                total += int(event_item.get("count", 0))
+            print(f"    Pixel {pid} ({p.get('name', 'unnamed')}): {total} PageViews (24h), last_fired: {p.get('last_fired_time', 'N/A')}")
             if total > best_count:
                 best_count = total
                 best_pixel = p
@@ -149,51 +147,82 @@ def get_pixel_event_names(account):
 
 def get_pixel_daily_stats(pixel_id, date_start, date_end, pixel_event_names):
     """Fetch daily pixel event stats from the pixel stats endpoint (ALL events, not just ad-attributed)."""
-    start_ts = int(datetime.strptime(date_start, "%Y-%m-%d").timestamp())
-    end_ts = int(datetime.strptime(date_end, "%Y-%m-%d").timestamp()) + 86400
+    start_dt = datetime.strptime(date_start, "%Y-%m-%d")
+    end_dt = datetime.strptime(date_end, "%Y-%m-%d")
 
     daily_data = {}
 
-    # Fetch target events (Purchase, Lead, custom, etc.)
-    for event_name in pixel_event_names:
-        endpoint = f"{pixel_id}/stats"
-        params = {
-            "start_time": str(start_ts),
-            "end_time": str(end_ts),
-            "aggregation": "event",
-            "event": event_name
-        }
-        data = api_call(endpoint, params)
-        if data and "data" in data:
-            for entry in data["data"]:
-                ts = entry.get("timestamp", "")
-                count = int(entry.get("count", 0))
-                if ts:
-                    date_str = ts[:10]
-                    if date_str not in daily_data:
-                        daily_data[date_str] = {"events": 0, "pageviews": 0}
-                    daily_data[date_str]["events"] += count
-        elif data and "error" in data:
-            print(f"  Pixel stats error for {event_name}: {data['error'].get('message', 'unknown')}")
+    # Fetch data using aggregation=event with cursor-based pagination
+    cursor = None
+    pages_fetched = 0
+    max_pages = 35
 
-    # Fetch PageView events
-    endpoint = f"{pixel_id}/stats"
-    params = {
-        "start_time": str(start_ts),
-        "end_time": str(end_ts),
-        "aggregation": "event",
-        "event": "PageView"
-    }
-    data = api_call(endpoint, params)
-    if data and "data" in data:
+    while pages_fetched < max_pages:
+        endpoint = f"{pixel_id}/stats"
+        params = {"aggregation": "event"}
+        if cursor:
+            params["before"] = cursor
+
+        data = api_call(endpoint, params)
+        if not data or "data" not in data or len(data["data"]) == 0:
+            break
+
+        # Parse each hourly entry
         for entry in data["data"]:
-            ts = entry.get("timestamp", "")
-            count = int(entry.get("count", 0))
-            if ts:
-                date_str = ts[:10]
-                if date_str not in daily_data:
-                    daily_data[date_str] = {"events": 0, "pageviews": 0}
-                daily_data[date_str]["pageviews"] += count
+            start_time_str = entry.get("start_time", "")
+            if not start_time_str:
+                continue
+
+            # Parse start_time to extract date (YYYY-MM-DD)
+            try:
+                # Format: "2026-04-07T17:00:00+0000"
+                entry_dt = datetime.fromisoformat(
+                    re.sub(r'([+-]\d{2})(\d{2})$', r'\1:\2', start_time_str).replace("Z", "+00:00")
+                )
+                entry_date = entry_dt.strftime("%Y-%m-%d")
+            except:
+                continue
+
+            # Skip if outside date range
+            if entry_dt.date() < start_dt.date() or entry_dt.date() > end_dt.date():
+                continue
+
+            # Initialize date entry if needed
+            if entry_date not in daily_data:
+                daily_data[entry_date] = {"events": 0, "pageviews": 0}
+
+            # Parse nested data array: {value, count}
+            if "data" in entry:
+                for event_item in entry["data"]:
+                    value = event_item.get("value", "")
+                    count = int(event_item.get("count", 0))
+
+                    if value in pixel_event_names:
+                        daily_data[entry_date]["events"] += count
+                    elif value == "PageView":
+                        daily_data[entry_date]["pageviews"] += count
+
+        pages_fetched += 1
+
+        # Check if earliest entry on this page is before our date range â stop paginating
+        earliest_on_page = data["data"][-1].get("start_time", "") if data["data"] else ""
+        if earliest_on_page:
+            try:
+                earliest_dt = datetime.fromisoformat(
+                    re.sub(r'([+-]\d{2})(\d{2})$', r'\1:\2', earliest_on_page).replace("Z", "+00:00")
+                )
+                if earliest_dt.date() < start_dt.date():
+                    break
+            except:
+                pass
+
+        # Check for more pages
+        if "paging" in data and "cursors" in data["paging"]:
+            cursor = data["paging"]["cursors"].get("before")
+            if not cursor:
+                break
+        else:
+            break
 
     return daily_data
 
@@ -263,7 +292,7 @@ def analyze_account(account):
     # Get event types to track (include all Meta API naming variants)
     if account_type == "ecommerce":
         base = account.get("event_type", "")
-        event_types = [base, "purchase", "omni_purchase"]
+        event_types = [base, "purchase", "omni_purchase", "offsite_conversion.fb_pixel_purchase"]
         if base and base not in event_types:
             event_types.append(base)
     else:

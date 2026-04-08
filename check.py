@@ -65,13 +65,45 @@ def api_call(endpoint, params=None):
 
 
 def get_pixel_id(account_id):
-    """Fetch the first pixel ID for an account."""
+    """Fetch the best (most active) pixel for an account by checking data volume."""
     endpoint = f"{account_id}/adspixels"
-    params = {"fields": "id,name,last_fired_time"}
+    params = {"fields": "id,name,last_fired_time", "limit": "25"}
     data = api_call(endpoint, params)
     if data and "data" in data and len(data["data"]) > 0:
-        print(f"  Pixels found for {account_id}: {len(data['data'])} pixel(s)")
-        return data["data"][0]
+        pixels = data["data"]
+        print(f"  Pixels found for {account_id}: {len(pixels)} pixel(s)")
+        if len(pixels) == 1:
+            print(f"  Using pixel {pixels[0].get('id')} ({pixels[0].get('name', 'unnamed')})")
+            return pixels[0]
+        # Multiple pixels — check PageView volume for each to find the most active
+        best_pixel = None
+        best_count = -1
+        now_ts = int(datetime.now().timestamp())
+        week_ago_ts = now_ts - (7 * 86400)
+        for p in pixels:
+            pid = p.get("id")
+            stats_endpoint = f"{pid}/stats"
+            stats_params = {
+                "start_time": str(week_ago_ts),
+                "end_time": str(now_ts),
+                "aggregation": "event",
+                "event": "PageView"
+            }
+            stats_data = api_call(stats_endpoint, stats_params)
+            total = 0
+            if stats_data and "data" in stats_data:
+                for entry in stats_data["data"]:
+                    total += int(entry.get("count", 0))
+            print(f"    Pixel {pid} ({p.get('name', 'unnamed')}): {total} PageViews (7d), last_fired: {p.get('last_fired_time', 'N/A')}")
+            if total > best_count:
+                best_count = total
+                best_pixel = p
+        if best_pixel:
+            print(f"  Selected pixel {best_pixel.get('id')} ({best_pixel.get('name', 'unnamed')}) with {best_count} PageViews")
+            return best_pixel
+        # Fallback: pick the one with most recent last_fired_time
+        pixels_sorted = sorted(pixels, key=lambda x: x.get("last_fired_time", ""), reverse=True)
+        return pixels_sorted[0]
     else:
         print(f"  No pixels found for {account_id}")
         return None
@@ -271,7 +303,7 @@ def analyze_account(account):
         if not daily:
             print(f"  Pixel stats empty, falling back to insights API for {name}")
             daily = get_daily_insights(account_id, thirty_days_ago, yesterday, event_types)
-    else:
+   else:
         print(f"  Using insights API for {name} (no pixel)")
         daily = get_daily_insights(account_id, thirty_days_ago, yesterday, event_types)
 
@@ -476,7 +508,7 @@ def generate_html(results):
         .account-name.lead-gen {{ color: #00856A; }}
         .status-badge {{
             display: inline-block;
-            padding: 4px 10px;
+padding: 4px 10px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
@@ -592,7 +624,7 @@ def generate_html(results):
         <div class="summary">
             <div class="summary-card critical">
                 <div class="label">Critical</div>
-                <div class="number">{critical_count}</div>
+n                <div class="number">{critical_count}</div>
             </div>
             <div class="summary-card warning">
                 <div class="label">Warnings</div>

@@ -471,7 +471,15 @@ def main():
     with open(CONFIG_FILE, "r") as f:
         config = json.load(f)
 
-    accounts = config.get("accounts", [])
+    accounts_data = config.get("accounts", [])
+    # Flatten accounts: config may have categories (ecommerce, lead_gen, special) as dict
+    if isinstance(accounts_data, dict):
+        accounts = []
+        for category in accounts_data.values():
+            if isinstance(category, list):
+                accounts.extend(category)
+    else:
+        accounts = accounts_data
     total_accounts = len(accounts)
 
     print(f"Analyzing {total_accounts} accounts...")
